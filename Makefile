@@ -26,9 +26,10 @@ endif
 
 up:
 # Check the volume directory if they are not exist, create them
-	@if [ ! -d /home/${USER}/data ]; then \
+	@if [ ! -d home/${USER}/data ]; then \
 		mkdir -p /home/${USER}/data/wordpress  /home/${USER}/data/mariadb; \
 	fi
+
 # Build the containers
 	-@docker-compose -f src/docker-compose.yml up --build
 
@@ -42,28 +43,33 @@ stop:
 fclean:
 	-@docker-compose -f src/docker-compose.yml down
 
-	@if docker ps -qa | grep -q inception; then \
-		docker stop `docker ps -qa` && \
-		docker rm -f `docker ps -qa` && \
+#	Stop all containers created for the Inception project:
+	@if [ ! -z "$$(docker ps -qa)" ]; then \
+		docker stop $$(docker ps -qa) && \
+		docker rm -f $$(docker ps -qa) && \
 		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ containers STOPPED$(RS)"; \
 	fi
 
-	@if docker images -qa | grep -q inception; then \
-		docker rmi -f `docker images -qa` && \
+# 	Remove all images created for the Inception project:
+	@if [ ! -z "$$(docker images -qa)" ]; then \
+		docker rmi -f $$(docker images -qa) && \
 		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ images DELETED$(RS)"; \
 	fi
 
-	@if docker network ls | grep -q inception; then \
-		docker network rm inception && \
+#	Remove all networks created for the Inception project:
+	@if [ ! -z "$$(docker network ls | grep src_inception)" ]; then \
+		docker network rm src_inception && \
 		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ network DELETED$(RS)"; \
 	fi
 
-	@if docker volume ls | grep -q inception; then \
-		docker volume rm inception && \
+#	Remove all volumes created for the Inception project:
+	@if [ ! -z "$$(docker volume ls -q)" ]; then \
+		docker volume rm -f $$(docker volume ls -q) && \
 		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ volume DELETED$(RS)"; \
 	fi
 
-	@if [ -d /home/${USER}/data ]; then \
+#	Remove all data from the Inception project:
+	@if [ ! -z "$$(-d /home/${USER}/data)" ]; then \
 		sudo rm -rf /home/${USER}/data && \
 		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ data DELETED$(RS)"; \
 	fi
@@ -73,7 +79,7 @@ fclean:
 
 
 #====================================================================================
-#========================  [Run evry container by its own]  =========================
+#=================  [Run evry container by its own for debugging]  ==================
 #====================================================================================
 
 #===================================  [Mariadb]  ====================================
