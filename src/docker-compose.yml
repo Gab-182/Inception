@@ -1,0 +1,116 @@
+version: '2.17.3'
+services:
+
+#################################  [mariadb]  #################################
+  mariadb:
+      image: mariadb_inception
+      container_name: mariadb
+      env_file: .env
+      init: true
+      healthcheck:
+        test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}"]
+        interval: 10s
+        timeout: 2s
+        retries: 5
+      environment:
+          MYSQL_ADMIN: ${MYSQL_ADMIN}
+          MYSQL_ADMIN_PASSWORD: ${MYSQL_ADMIN_PASSWORD}
+          MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+          MYSQL_DATABASE: ${MYSQL_DATABASE}
+          MYSQL_USER: ${MYSQL_USER}
+          MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      build:
+        context: ./requirements/mariadb
+        dockerfile: Dockerfile
+        args:
+          MYSQL_ADMIN: ${MYSQL_ADMIN}
+          MYSQL_ADMIN_PASSWORD: ${MYSQL_ADMIN_PASSWORD}
+          MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+          MYSQL_DATABASE: ${MYSQL_DATABASE}
+          MYSQL_USER: ${MYSQL_USER}
+          MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      restart: on-failure
+      ports:
+        - "3306:3306"
+      networks:
+        - inception
+      volumes:
+        - maria_data:/var/lib/mysql
+################################  [wordpress]  ################################
+  wordpress:
+    depends_on:
+      - mariadb
+    image: wordpress_inception
+    container_name: wordpress
+    init: true
+    env_file: .env
+    environment:
+        WORDPRESS_DB_HOST: mariadb:3306
+        WORDPRESS_DB_USER: ${MYSQL_USER}
+        WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+        WORDPRESS_DB_ADMIN: ${MYSQL_ADMIN}
+        WORDPRESS_DB_ADMIN_PASS: ${MYSQL_ADMIN_PASSWORD}
+        WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+        WORDPRESS_USER_EMAIL: ${USER_EMAIL}
+        URL: ${URL}
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+      args:
+        WORDPRESS_DB_HOST: mariadb:3306
+        WORDPRESS_DB_USER: ${MYSQL_USER}
+        WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+        WORDPRESS_DB_ADMIN: ${MYSQL_ADMIN}
+        WORDPRESS_DB_ADMIN_PASS: ${MYSQL_ADMIN_PASSWORD}
+        WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+        WORDPRESS_USER_EMAIL: ${USER_EMAIL}
+        URL: ${URL}
+    volumes:
+      - wp_data:/var/www/html
+    ports:
+      - "9000:9000"
+    networks:
+      - inception
+    restart: on-failure
+##################################  [Nginx]  ##################################
+  nginx:
+    depends_on:
+      - wordpress
+    image: nginx_inception
+    container_name: nginx
+    init: true
+    env_file: .env
+    environment:
+        CERTIFICATE: ${CERTIFICATE}
+        PRIVATE_KEY: ${PRIVATE_KEY}
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+      args:
+        CERTIFICATE: ${CERTIFICATE}
+        PRIVATE_KEY: ${PRIVATE_KEY}
+    ports:
+      - "443:443"
+    volumes:
+      - wp_data:/var/www/html
+    restart: on-failure
+    networks:
+      - inception
+#################################  [volumes]  #################################
+volumes:
+  maria_data:
+    driver: local
+    driver_opts:
+        type: none
+        device: ./requirements/mariadb/data
+        o: bind
+  wp_data:
+    driver: local
+    driver_opts:
+        type: none
+        device: ./requirements/wordpress/data
+        o: bind
+################################  [networks]  #################################
+networks:
+  inception:
+#==============================================================================
