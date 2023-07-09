@@ -35,7 +35,6 @@ up:
 #====================================================================================
 stop:
 	-@docker-compose -f src/docker-compose.yml down 
-#	-@docker stop `docker ps -qa`
 
 	@echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ containers STOPPED$(RS)"
 	@echo "$(Y)———————————————————————————————————————————————————————————————————————$(RS)"
@@ -43,25 +42,35 @@ stop:
 fclean:
 	-@docker-compose -f src/docker-compose.yml down
 
-#	Stop all running containers
-	-@docker stop `docker ps -qa`
+	@if docker ps -qa | grep -q inception; then \
+		docker stop `docker ps -qa` && \
+		docker rm -f `docker ps -qa` && \
+		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ containers STOPPED$(RS)"; \
+	fi
 
-#	Remove the created containers
-	-@docker rm `docker ps -qa`
+	@if docker images -qa | grep -q inception; then \
+		docker rmi -f `docker images -qa` && \
+		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ images DELETED$(RS)"; \
+	fi
 
-#	Remove the created images
-	-@docker rmi -f `docker images -qa`
+	@if docker network ls | grep -q inception; then \
+		docker network rm inception && \
+		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ network DELETED$(RS)"; \
+	fi
 
-#	Remove the created network
-	-@docker network rm inception 
+	@if docker volume ls | grep -q inception; then \
+		docker volume rm inception && \
+		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ volume DELETED$(RS)"; \
+	fi
 
-#	Remove the created volumes
-	-@docker volume rm `docker volume ls -q` 
-	-@rm -rf /home/$USER/data/wordpress
-	-@rm -rf /home/$USER/data/mariadb 
+	@if [ -d /home/${USER}/data ]; then \
+		sudo rm -rf /home/${USER}/data && \
+		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ data DELETED$(RS)"; \
+	fi
 
 	@echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ images && containers DELETED$(RS)"
 	@echo "$(Y)———————————————————————————————————————————————————————————————————————$(RS)"
+
 
 #====================================================================================
 #========================  [Run evry container by its own]  =========================
