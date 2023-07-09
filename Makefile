@@ -69,7 +69,7 @@ fclean:
 	fi
 
 #	Remove all data from the Inception project:
-	@if [ ! -z "$$(-d /home/${USER}/data)" ]; then \
+	@if [ -z "$$(-d /home/${USER}/data)" ]; then \
 		sudo rm -rf /home/${USER}/data && \
 		echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ data DELETED$(RS)"; \
 	fi
