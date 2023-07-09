@@ -26,9 +26,9 @@ endif
 
 up:
 # Check the volume directory if they are not exist, create them
-# -d flag checks if the directory exists
-	@test -d src/requirements/wordpress/data || mkdir -p src/requirements/wordpress/data
-	@test -d src/requirements/mariadb/data || mkdir -p src/requirements/mariadb/data
+	@if [ ! -d /home/${USER}/data ]; then \
+		mkdir -p /home/${USER}/data/wordpress  /home/${USER}/data/mariadb; \
+	fi
 # Build the containers
 	-@docker-compose -f src/docker-compose.yml up --build
 
@@ -57,8 +57,8 @@ fclean:
 
 #	Remove the created volumes
 	-@docker volume rm `docker volume ls -q` 
-	-@rm -rf src/requirements/mariadb/data 
-	-@rm -rf src/requirements/wordpress/data 
+	-@rm -rf /home/$USER/data/wordpress
+	-@rm -rf /home/$USER/data/mariadb 
 
 	@echo "$(G)【OK】 $(RS)        $(R)❮Inception❯ images && containers DELETED$(RS)"
 	@echo "$(Y)———————————————————————————————————————————————————————————————————————$(RS)"
