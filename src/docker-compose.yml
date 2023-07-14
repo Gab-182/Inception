@@ -30,7 +30,7 @@ services:
           MYSQL_USER: ${MYSQL_USER}
           MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       restart: on-failure
-      ports:
+      expose:
         - "3306"
       networks:
         - inception
@@ -67,7 +67,7 @@ services:
         URL: ${URL}
     volumes:
       - wp_data:/var/www/html
-    ports:
+    expose:
       - "9000"
     networks:
       - inception
